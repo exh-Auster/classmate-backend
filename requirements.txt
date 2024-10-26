@@ -1,3 +1,2 @@
 fastapi[standard]
-peewee
-psycopg[binary]
+pony
