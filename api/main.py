@@ -49,6 +49,12 @@ def db_test():
 
     return "!"
 
+@app.get("/db_create")
+def db_create():
+    db.create_tables()
+
+    return "!"
+
 @app.get("/db_drop")
 def db_drop():
     db.drop_all_tables(with_all_data=True)
@@ -56,6 +62,7 @@ def db_drop():
     return "!"
 
 @app.get("/db_add")
+@db_session
 def db_add():
     test = User(name="test", email="test")
 
