@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from datetime import date
 
 db = Database()
+
 db.bind(provider='postgres',
         user=os.environ["POSTGRES_USER"],
         password=os.environ["POSTGRES_PASSWORD"],
@@ -19,13 +20,14 @@ class User(db.Entity):
     bio = Optional(str)
     registered_at = Optional(str) # TODO
     groups = Set('Group') # TODO
-    # posts = Set('Post')
+    posts = Set('Post') # TODO
 
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
     created_by = Required(User)
     name = Required(str, Unique=True)
     description = Required(str)
+    posts = Set('Post') # TODO
     
 class Post(db.Entity):
     id = PrimaryKey(int, auto=True)
