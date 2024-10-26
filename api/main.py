@@ -15,7 +15,7 @@ db.bind(provider='postgres',
 class User(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
-    email = Required(str, Unique=True)
+    email = Required(str, unique=True)
     password_hash = Optional(str) # TODO
     bio = Optional(str)
     registered_at = Optional(str) # TODO
@@ -25,7 +25,7 @@ class User(db.Entity):
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
     created_by = Required(User)
-    name = Required(str, Unique=True)
+    name = Required(str, unique=True)
     description = Required(str)
     posts = Set('Post') # TODO
     
