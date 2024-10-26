@@ -19,8 +19,16 @@ class User(db.Entity):
     password_hash = Optional(str) # TODO
     bio = Optional(str)
     registered_at = Optional(str) # TODO
+    following = Set('Connection')
     groups = Set('Group') # TODO
     posts = Set('Post') # TODO
+    comments = Set('Comment')
+    likes = Set('Like')
+
+class Connection(db.Entity): # TODO
+    id = PrimaryKey(int, auto=True)
+    source = Required(User)
+    destination = Required(User)
 
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -36,6 +44,20 @@ class Post(db.Entity):
     timestamp = Optional(str) # TODO
     text_content = Required(str)
     external_content_url = Optional(str) # TODO
+    comments = Set('Comment')
+    likes = Set('Like')
+
+class Comment(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    author = Required(User)
+    post = Required(Post)
+    timestamp = Optional(str) # TODO
+    text_content = Required(str)
+
+class Like(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    author = Required(User)
+    post = Required(Post)
 
 db.generate_mapping(create_tables=True)
 
