@@ -19,7 +19,8 @@ class User(db.Entity):
     password_hash = Optional(str) # TODO
     bio = Optional(str)
     registered_at = Optional(str) # TODO
-    following = Set('Connection')
+    following = Set('Connection', reverse='source')
+    followers = Set('Connection', reverse='destination')
     groups = Set('Group') # TODO
     posts = Set('Post') # TODO
     comments = Set('Comment')
@@ -27,8 +28,8 @@ class User(db.Entity):
 
 class Connection(db.Entity): # TODO
     id = PrimaryKey(int, auto=True)
-    source = Required(User)
-    destination = Required(User)
+    source = Required(User, reverse='following')
+    destination = Required(User, reverse='followers')
 
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
