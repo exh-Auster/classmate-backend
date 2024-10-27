@@ -23,7 +23,7 @@ class User(db.Entity):
     following = Set('Connection', reverse='source')
     followers = Set('Connection', reverse='destination')
     groups = Set('Group') # TODO
-    posts = Set('Post') # TODO
+    publications = Set('Publication') # TODO
     comments = Set('Comment')
     likes = Set('Like')
 
@@ -37,9 +37,9 @@ class Group(db.Entity):
     created_by = Required(User)
     name = Required(str, unique=True)
     description = Required(str)
-    posts = Set('Post') # TODO
+    publications = Set('Publication') # TODO
     
-class Post(db.Entity):
+class Publication(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
     group = Required(Group)
@@ -52,14 +52,14 @@ class Post(db.Entity):
 class Comment(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
-    post = Required(Post)
+    publication = Required(Publication)
     timestamp = Optional(str) # TODO
     text_content = Required(str)
 
 class Like(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
-    post = Required(Post)
+    publication = Required(Publication)
     # timestamp = Optional(str)
 
 db.generate_mapping(create_tables=True)
@@ -139,20 +139,20 @@ def create_group(group_data: dict):
 #             status_code = 404, detail = f"Group with {group_id=} does not exist."
 #     )
 
-@app.get("/post/{post_id}")
+@app.get("/publication/{post_id}")
 @db_session
 def get_post_by_id(post_id: int):
-    if Post.exists(id=post_id):
-        return Post[post_id]
+    if Publication.exists(id=post_id):
+        return Publication[post_id]
     else:
         raise HTTPException(
             status_code = 404, detail = f"Post with {post_id=} does not exist."
     )
 
-@app.post("/post")
+@app.post("/publication")
 @db_session
 def create_post(post_data: dict):
-    Post(
+    Publication(
         author=post_data["author_id"],
         group=post_data["group_id"],
         timestamp=datetime.now().isoformat(), # TODO
@@ -162,11 +162,11 @@ def create_post(post_data: dict):
 
     return {"status": "ok"} # TODO
 
-@app.delete("/post/{post_id}")
+@app.delete("/publication/{post_id}")
 @db_session
 def delete_post(post_id: int):
-    if Post.exists(id=post_id):
-        Post[post_id].delete()
+    if Publication.exists(id=post_id):
+        Publication[post_id].delete()
 
         return {"status": "ok"} # TODO
     else:
@@ -179,7 +179,7 @@ def delete_post(post_id: int):
 def create_comment(comment_data: dict):
     Comment(
         author=comment_data["author_id"],
-        post=comment_data["post_id"],
+        publication=comment_data["post_id"],
         timestamp=datetime.now().isoformat(), # TODO
         text_content=comment_data["text_content"]
     )
@@ -202,7 +202,7 @@ def delete_comment(comment_id: int):
 def like_post(like_data: dict):
     Like(
         author=like_data["author_id"],
-        post=like_data["post_id"],
+        publication=like_data["post_id"],
         # timestamp=datetime.now().isoformat(), # TODO
     )
 
