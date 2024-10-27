@@ -79,9 +79,111 @@ app.add_middleware(
 )
 
 @app.get("/")
-def get_root():
-    return "!"
-
-@app.get("/healthcheck")
 def healthcheck():
     return {"status": "ok"}
+
+@app.get("/user/{user_id}")
+@db_session
+def get_user_by_id(user_id: int):
+    if User.exists(id=user_id):
+        return User[user_id]
+    else:
+        raise HTTPException(
+            status_code = 404, detail = f"User with {user_id=} does not exist."
+    )
+
+@app.get("/group/{group_id}")
+@db_session
+def get_group_by_id(group_id: int):
+    if Group.exists(id=group_id):
+        return Group[group_id]
+    else:
+        raise HTTPException(
+            status_code = 404, detail = f"Group with {group_id=} does not exist."
+    )
+
+@app.get("/post/{post_id}")
+@db_session
+def get_post_by_id(post_id: int):
+    if Post.exists(id=post_id):
+        return Post[post_id]
+    else:
+        raise HTTPException(
+            status_code = 404, detail = f"Post with {post_id=} does not exist."
+    )
+
+@app.post("/post")
+@db_session
+def create_post(post_data: dict):
+    Post(
+        author=post_data["author_id"],
+        group=post_data["group_id"],
+        timestamp=datetime.now().isoformat(), # TODO
+        text_content=post_data["text_content"],
+        external_content_url=post_data.get("external_content_url")
+    )
+
+    return {"status": "ok"} # TODO
+
+@app.delete("/post/{post_id}")
+@db_session
+def delete_post(post_id: int):
+    if Post.exists(id=post_id):
+        Post[post_id].delete()
+
+        return {"status": "ok"} # TODO
+    else:
+        raise HTTPException(
+            status_code = 404, detail = f"Post with {post_id=} does not exist."
+    )
+
+@app.post("/comment")
+@db_session
+def create_comment(comment_data: dict):
+    Comment(
+        author=comment_data["author_id"],
+        post=comment_data["post_id"],
+        timestamp=datetime.now().isoformat(), # TODO
+        text_content=comment_data["text_content"]
+    )
+
+    return {"status": "ok"} # TODO
+
+@app.delete("/comment/{comment_id}")
+@db_session
+def delete_comment(comment_id: int):
+    if Comment.exists(id=comment_id):
+        Comment[comment_id].delete()
+        return {"status": "ok"} # TODO
+    else:
+        raise HTTPException(
+            status_code = 404, detail = f"Comment with {comment_id=} does not exist."
+    )
+
+@app.post("/like")
+@db_session
+def like_post(like_data: dict):
+    Like(
+        author=like_data["author_id"],
+        post=like_data["post_id"],
+        timestamp=datetime.now().isoformat(), # TODO
+    )
+
+    return {"status": "ok"} # TODO
+
+@app.post("/follow")
+@db_session
+def follow_user(connection_data: dict):
+    Connection(
+        source=connection_data["source"],
+        destination=connection_data["destination"],
+    )
+
+    return {"status": "ok"} # TODO
+
+@app.delete("/follow/{user_id}")
+@db_session
+def unfollow(connection_id: int):
+    Connection[connection_id].delete() # TODO
+
+    return {"status": "ok"} # TODO
