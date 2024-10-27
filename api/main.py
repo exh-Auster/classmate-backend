@@ -67,7 +67,3 @@ app = FastAPI()
 @app.get("/")
 def get_root():
     return "!"
-
-@app.get("/healthcheck")
-def healthcheck():
-    return {"status": "ok"}
