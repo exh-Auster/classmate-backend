@@ -1,7 +1,8 @@
 import os
 
-from datetime import date
-from fastapi import FastAPI
+from datetime import datetime
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pony.orm import *
 
 db = Database()
@@ -63,6 +64,19 @@ class Like(db.Entity):
 db.generate_mapping(create_tables=True)
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://eng-soft-proj.vercel.app"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def get_root():
