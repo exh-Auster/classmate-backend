@@ -68,7 +68,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
-    "https://eng-soft-proj.vercel.app"
+    "https://eng-soft-proj.vercel.app",
+    "*"
 ]
 
 app.add_middleware(
