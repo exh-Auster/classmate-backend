@@ -28,9 +28,9 @@ class User(db.Entity):
     likes = Set('Like')
 
 class Connection(db.Entity): # TODO
-    id = PrimaryKey(int, auto=True)
     source = Required(User, reverse='following')
     destination = Required(User, reverse='followers')
+    PrimaryKey(source, destination)
 
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -60,6 +60,7 @@ class Like(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
     post = Required(Post)
+    timestamp = Optional(str)
 
 db.generate_mapping(create_tables=True)
 
