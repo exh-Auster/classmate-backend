@@ -60,7 +60,7 @@ class Like(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
     post = Required(Post)
-    timestamp = Optional(str)
+    # timestamp = Optional(str)
 
 db.generate_mapping(create_tables=True)
 
@@ -83,6 +83,24 @@ app.add_middleware(
 def healthcheck():
     return {"status": "ok"}
 
+@app.post("/user")
+@db_session
+def create_user(user_data: dict):
+    if User.exists(email=user_data["email"]):
+        raise HTTPException(
+            status_code=400, detail="User with this email already exists."
+        )
+    
+    User(
+        name=user_data["name"],
+        email=user_data["email"],
+        password_hash=user_data.get("password_hash"),
+        bio=user_data.get("bio"),
+        registered_at=datetime.now().isoformat(),
+    )
+
+    return {"status": "ok"}
+
 @app.get("/user/{user_id}")
 @db_session
 def get_user_by_id(user_id: int):
@@ -93,15 +111,32 @@ def get_user_by_id(user_id: int):
             status_code = 404, detail = f"User with {user_id=} does not exist."
     )
 
-@app.get("/group/{group_id}")
+@app.post("/group")
 @db_session
-def get_group_by_id(group_id: int):
-    if Group.exists(id=group_id):
-        return Group[group_id]
-    else:
+def create_group(group_data: dict):
+    if Group.exists(name=group_data["name"]):
         raise HTTPException(
-            status_code = 404, detail = f"Group with {group_id=} does not exist."
+            status_code=400, detail="Group with this name already exists."
+        )
+    
+    Group(
+        created_by=group_data["created_by"],
+        name=group_data["name"],
+        description=group_data["description"],
+        posts=set()
     )
+
+    return {"status": "ok"}
+
+# @app.get("/group/{group_id}")
+# @db_session
+# def get_group_by_id(group_id: int):
+#     if Group.exists(id=group_id):
+#         return Group[group_id]
+#     else:
+#         raise HTTPException(
+#             status_code = 404, detail = f"Group with {group_id=} does not exist."
+#     )
 
 @app.get("/post/{post_id}")
 @db_session
@@ -167,7 +202,7 @@ def like_post(like_data: dict):
     Like(
         author=like_data["author_id"],
         post=like_data["post_id"],
-        timestamp=datetime.now().isoformat(), # TODO
+        # timestamp=datetime.now().isoformat(), # TODO
     )
 
     return {"status": "ok"} # TODO
