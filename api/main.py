@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.models import *
@@ -25,143 +25,8 @@ app.add_middleware(
 def healthcheck():
     return {"status": "ok"}
 
-@app.post("/user")
-@db_session
-def create_user(user_data: dict):
-    if User.exists(email=user_data["email"]):
-        raise HTTPException(
-            status_code=400, detail="User with this email already exists."
-        )
-    
-    User(
-        name=user_data["name"],
-        email=user_data["email"],
-        password_hash=user_data.get("password_hash"),
-        bio=user_data.get("bio"),
-        registered_at=datetime.now().isoformat(),
-    )
-
-    return {"status": "ok"}
-
-@app.get("/user/{user_id}")
-@db_session
-def get_user_by_id(user_id: int):
-    if User.exists(id=user_id):
-        return User[user_id]
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"User with {user_id=} does not exist."
-    )
-
-@app.post("/group")
-@db_session
-def create_group(group_data: dict):
-    if Group.exists(name=group_data["name"]):
-        raise HTTPException(
-            status_code=400, detail="Group with this name already exists."
-        )
-    
-    Group(
-        created_by=group_data["created_by"],
-        name=group_data["name"],
-        description=group_data["description"],
-        posts=set()
-    )
-
-    return {"status": "ok"}
-
-# @app.get("/group/{group_id}")
-# @db_session
-# def get_group_by_id(group_id: int):
-#     if Group.exists(id=group_id):
-#         return Group[group_id]
-#     else:
-#         raise HTTPException(
-#             status_code = 404, detail = f"Group with {group_id=} does not exist."
-#     )
-
-@app.get("/publication/{post_id}")
-@db_session
-def get_post_by_id(post_id: int):
-    if Publication.exists(id=post_id):
-        return Publication[post_id]
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Post with {post_id=} does not exist."
-    )
-
-@app.post("/publication")
-@db_session
-def create_post(post_data: dict):
-    Publication(
-        author=post_data["author_id"],
-        group=post_data["group_id"],
-        timestamp=datetime.now().isoformat(), # TODO
-        text_content=post_data["text_content"],
-        external_content_url=post_data.get("external_content_url")
-    )
-
-    return {"status": "ok"} # TODO
-
-@app.delete("/publication/{post_id}")
-@db_session
-def delete_post(post_id: int):
-    if Publication.exists(id=post_id):
-        Publication[post_id].delete()
-
-        return {"status": "ok"} # TODO
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Post with {post_id=} does not exist."
-    )
-
-@app.post("/comment")
-@db_session
-def create_comment(comment_data: dict):
-    Comment(
-        author=comment_data["author_id"],
-        publication=comment_data["post_id"],
-        timestamp=datetime.now().isoformat(), # TODO
-        text_content=comment_data["text_content"]
-    )
-
-    return {"status": "ok"} # TODO
-
-@app.delete("/comment/{comment_id}")
-@db_session
-def delete_comment(comment_id: int):
-    if Comment.exists(id=comment_id):
-        Comment[comment_id].delete()
-        return {"status": "ok"} # TODO
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Comment with {comment_id=} does not exist."
-    )
-
-@app.post("/like")
-@db_session
-def like_post(like_data: dict):
-    Like(
-        author=like_data["author_id"],
-        publication=like_data["post_id"],
-        # timestamp=datetime.now().isoformat(), # TODO
-    )
-
-    return {"status": "ok"} # TODO
-
-@app.post("/follow")
-@db_session
-def follow_user(connection_data: dict):
-    Connection(
-        source=connection_data["source"],
-        destination=connection_data["destination"],
-    )
-
-    return {"status": "ok"} # TODO
-
-@app.delete("/follow/{user_id}")
-@db_session
-def unfollow(connection_id: int):
-    Connection[connection_id].delete() # TODO
-
-    return {"status": "ok"} # TODO
+@app.get("/wipe")
+def wipe_db():
+    db.drop_all_tables(with_all_data=True)
+    db.create_tables()
+    return {"status": "wiped"}
