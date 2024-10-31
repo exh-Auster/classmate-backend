@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pony.orm import *
 
 db = Database()
@@ -11,51 +12,60 @@ db.bind(provider='postgres',
 
 class User(db.Entity):
     id = PrimaryKey(int, auto=True)
-    name = Required(str)
-    email = Required(str, unique=True)
-    password_hash = Optional(str) # TODO
-    bio = Optional(str)
-    registered_at = Optional(str) # TODO
-    following = Set('Connection', reverse='source')
-    followers = Set('Connection', reverse='destination')
-    groups = Set('Group') # TODO
-    publications = Set('Publication') # TODO
-    comments = Set('Comment')
+    email = Required(str, 254, unique=True)
+    password_hash = Required(str)
+    registered_at = Required(datetime)
+    name = Required(str, 70)
+    bio = Optional(str, 240)
+    groups = Set('Group', reverse='members')
+    created_groups = Set('Group', reverse='created_by')
+    posts = Set('Post')
     likes = Set('Like')
+    comments = Set('Comment')
+    following = Set('Following', reverse='follower')
+    followers = Set('Following', reverse='followee')
 
-class Connection(db.Entity): # TODO
-    source = Required(User, reverse='following')
-    destination = Required(User, reverse='followers')
-    PrimaryKey(source, destination)
 
 class Group(db.Entity):
     id = PrimaryKey(int, auto=True)
-    created_by = Required(User)
-    name = Required(str, unique=True)
-    description = Required(str)
-    publications = Set('Publication') # TODO
-    
-class Publication(db.Entity):
+    name = Required(str, 25)
+    description = Optional(str, 240)
+    posts = Set('Post')
+    members = Set(User, reverse='groups')
+    created_by = Required(User, reverse='created_groups')
+    creation_date = Required(datetime)
+
+
+class Post(db.Entity):
     id = PrimaryKey(int, auto=True)
-    author = Required(User)
     group = Required(Group)
-    timestamp = Optional(str) # TODO
-    text_content = Required(str)
-    external_content_url = Optional(str) # TODO
-    comments = Set('Comment')
+    author = Required(User)
+    body = Required(str, 500)
     likes = Set('Like')
+    comments = Set('Comment')
+    external_content_url = Optional(str, 255)
+    timestamp = Required(datetime)
+
 
 class Comment(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
-    publication = Required(Publication)
-    timestamp = Optional(str) # TODO
-    text_content = Required(str)
+    post = Required(Post)
+    body = Required(str, 240)
+    timestamp = Required(datetime)
+
 
 class Like(db.Entity):
     id = PrimaryKey(int, auto=True)
     author = Required(User)
-    publication = Required(Publication)
-    # timestamp = Optional(str)
+    post = Required(Post)
+    timestamp = Required(datetime)
+
+
+class Following(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    follower = Required(User, reverse='following')
+    followee = Required(User, reverse='followers')
+    timestamp = Required(datetime)
 
 db.generate_mapping(create_tables=True)
