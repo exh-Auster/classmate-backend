@@ -112,3 +112,45 @@ create_groups()
 @app.get("/")
 def healthcheck():
     return {"status": "ok"}
+
+@app.post("/user/")
+def create_user(user: User):
+    with Session(engine) as session:
+        # TODO: check for existing email
+
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user # TODO: check
+    
+@app.get("/user/{user_id}")
+def get_user_by_id(user_id: int):
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.id == user_id)).one()
+        return user
+    
+@app.get("/user/{user_id}/groups/")
+def get_groups_by_user_id(user_id: int):
+    with Session(engine) as session:
+        groups = session.exec(select(Group).where(User.id == user_id)).all() # TODO: fix
+        return groups
+
+@app.get("/user/")
+def get_all_users():
+    with Session(engine) as session:
+        users = session.exec(select(User)).all()
+        return users
+    
+@app.post("/group/")
+def create_group(group: Group):
+    with Session(engine) as session:
+        session.add(group)
+        session.commit()
+        session.refresh(group)
+        return group # TODO: check
+    
+@app.get("/group/{group_id}")
+def get_group_by_id(group_id: int):
+    with Session(engine) as session:
+        group = session.exec(select(Group).where(Group.id == group_id)).one()
+        return group
