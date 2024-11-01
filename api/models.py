@@ -1,61 +1,79 @@
 import os
-from pony.orm import *
 
-db = Database()
+from datetime import datetime
 
-db.bind(provider='postgres',
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-        host=os.environ["POSTGRES_HOST"],
-        database=os.environ["POSTGRES_DATABASE"])
+from sqlmodel import *
 
-class User(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    name = Required(str)
-    email = Required(str, unique=True)
-    password_hash = Optional(str) # TODO
-    bio = Optional(str)
-    registered_at = Optional(str) # TODO
-    following = Set('Connection', reverse='source')
-    followers = Set('Connection', reverse='destination')
-    groups = Set('Group') # TODO
-    publications = Set('Publication') # TODO
-    comments = Set('Comment')
-    likes = Set('Like')
+class UserGroupLink(SQLModel, table=True):
+    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True) # TODO: None?
+    group_id: int | None = Field(default=None, foreign_key="group.id", primary_key=True) # TODO: None?
 
-class Connection(db.Entity): # TODO
-    source = Required(User, reverse='following')
-    destination = Required(User, reverse='followers')
-    PrimaryKey(source, destination)
+class User(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    email: str = Field(sa_column_kwargs={"unique": True}) # Required(str, 254, unique=True)
+    password_hash: str # Required(str)
+    registered_at: datetime = datetime.now() # Required(datetime)
+    name: str # Required(str, 70)
+    bio: str # Optional(str, 240)
+    groups: list["Group"] | None = Relationship(back_populates="members", link_model=UserGroupLink) # Set('Group', reverse='members')
+    created_groups: list["Group"] | None = Relationship(back_populates="created_by") # Set('Group', reverse='created_by')
+    posts: list["Post"] | None = Relationship(back_populates="author") # Set('Post')
+    likes: list["Like"] | None = Relationship(back_populates="author") # Set('Like')
+    comments: list["Comment"] | None = Relationship(back_populates="author") # Set('Comment')
+    following: list["Following"] | None = Relationship(back_populates="follower") # Set('Following', reverse='follower')
+    followers: list["Following"] | None = Relationship(back_populates="followee") # Set('Following', reverse='followee')
 
-class Group(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    created_by = Required(User)
-    name = Required(str, unique=True)
-    description = Required(str)
-    publications = Set('Publication') # TODO
-    
-class Publication(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    author = Required(User)
-    group = Required(Group)
-    timestamp = Optional(str) # TODO
-    text_content = Required(str)
-    external_content_url = Optional(str) # TODO
-    comments = Set('Comment')
-    likes = Set('Like')
+class Group(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str # Required(str, 25)
+    description: str | None = None # Optional(str, 240)
+    posts: list["Post"] | None = Relationship(back_populates="group") # Set('Post')
+    members: list["User"] | None = Relationship(back_populates="groups", link_model=UserGroupLink) # Set(User, reverse='groups') | TODO: None?
+    creation_date: datetime = datetime.now() # Required(datetime)
 
-class Comment(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    author = Required(User)
-    publication = Required(Publication)
-    timestamp = Optional(str) # TODO
-    text_content = Required(str)
+    creator_id: int = Field(default=None, foreign_key="user.id")
+    created_by: User = Relationship(back_populates="created_groups") # Required(User, reverse='created_groups')
 
-class Like(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    author = Required(User)
-    publication = Required(Publication)
-    # timestamp = Optional(str)
+class Post(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    body: str # Required(str, 500)
+    likes: list["Like"] | None = Relationship(back_populates="post") # Set('Like')
+    comments: list["Comment"] | None = Relationship(back_populates="post") # Set('Comment')
+    external_content_url: str | None # Optional(str, 255)
+    timestamp: datetime # Required(datetime)
 
-db.generate_mapping(create_tables=True)
+    author_id: int = Field(default=None, foreign_key="user.id")
+    author: User = Relationship(back_populates="posts") # Required(User)
+
+    group_id: int = Field(default=None, foreign_key="group.id")
+    group: Group = Relationship(back_populates="posts") # Required(Group)
+
+
+class Comment(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True) 
+    body: str # Required(str, 240)
+    timestamp: datetime # Required(datetime)
+
+    author_id: int = Field(default=None, foreign_key="user.id")
+    author: User = Relationship(back_populates="comments") # Required(User)
+
+    post_id: int = Field(default=None, foreign_key="post.id")
+    post: Post = Relationship(back_populates="comments") # Required(Post)
+
+class Like(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True) # TODO: composite?
+    timestamp: datetime # Required(datetime)
+
+    author_id: int = Field(default=None, foreign_key="user.id")
+    author: User = Relationship(back_populates="likes") # Required(User)
+
+    post_id: int = Field(default=None, foreign_key="post.id")
+    post: Post = Relationship(back_populates="likes") # Required(Post)
+
+class Following(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True) # TODO: composite?
+    timestamp: datetime # Required(datetime)
+
+    user_id: int = Field(default=None, foreign_key="user.id") # TODO: check
+    follower: User = Relationship(back_populates="following") # Required(User, reverse='following')
+    followee: User = Relationship(back_populates="followers") # Required(User, reverse='followers')
