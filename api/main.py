@@ -154,3 +154,51 @@ def get_group_by_id(group_id: int):
     with Session(engine) as session:
         group = session.exec(select(Group).where(Group.id == group_id)).one()
         return group
+    
+@app.post("/post/")
+def create_post(post: Post):
+    with Session(engine) as session:
+        # TODO: check for existing email
+
+        session.add(post)
+        session.commit()
+        session.refresh(post)
+        return post # TODO: check
+
+@app.get("/post/{post_id}")
+def get_post_by_id(post_id: int):
+    with Session(engine) as session:
+        post = session.exec(select(Post).where(Post.id == post_id)).one()
+        return post
+
+@app.post("/post/{post_id}/comment")
+def create_comment(post_id: int, comment: Comment):
+    comment.post_id = post_id # TODO: check
+
+    with Session(engine) as session:
+        session.add(comment)
+        session.commit()
+        session.refresh(comment)
+        return comment
+    
+@app.get("/post/{post_id}/comment")
+def get_comments_by_post_id(post_id: int):
+    with Session(engine) as session:
+        comments = session.exec(select(Comment).where(Comment.post_id == post_id)).all()
+        return comments
+
+@app.post("/post/{post_id}/like")
+def like_post(post_id: int, like: Like):
+    like.post_id = post_id # TODO: check
+
+    with Session(engine) as session:
+        session.add(like)
+        session.commit()
+        session.refresh(like)
+        return like
+    
+@app.get("/post/{post_id}/like")
+def get_likes_by_post_id(post_id: int):
+    with Session(engine) as session:
+        likes = session.exec(select(Like).where(Like.post_id == post_id)).all()
+        return likes
