@@ -1,9 +1,13 @@
+import os
+
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.models import *
+from sqlmodel import *
+
+from .database import * # from .db import engine, SQLModel
 
 app = FastAPI()
 
@@ -21,147 +25,258 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def create_users():
+    user_1 = User(email="felipe@mackenzista.com.br",
+                  password_hash="password1",
+                  registered_at=datetime(2024,9,23,19,20),
+                  name="Felipe Ribeiro",
+                  bio="Estudante do 6º semestre de Ciência da Computação",
+                  )
+    
+    user_2 = User(email="koji@mackenzista.com.br",
+                  password_hash="password2",
+                  registered_at=datetime(2024,9,23,19,20),
+                  name="Enzo Koji",
+                  bio="Estudante do 6º semestre de Ciência da Computação"
+                  )
+    user_3 = User(email="yuri@mackenzista.com.br",
+                  password_hash="password3",
+                  registered_at=datetime(2024,9,23,19,20),
+                  name="Yuri Nichimura",
+                  bio="Estudante do 6º semestre de Ciência da Computação"
+                  )
+
+    session = Session(engine)
+
+    session.add(user_1)
+    session.add(user_2)
+    session.add(user_3)
+
+    session.commit()
+
+def create_groups():
+    session = Session(engine)
+
+    group_1 = Group(name="Compiladores",
+                    description="Estudo e desenvolvimento de programas que traduzem código-fonte de linguagens de alto nível para código de máquina, envolvendo análise léxica, sintática, semântica e otimização de código.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_2 = Group(name="Computação Distribuída",
+                    description="Exploração de sistemas que dividem tarefas entre múltiplos computadores interconectados, visando aumentar o desempenho, a escalabilidade e a tolerância a falhas.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_3 = Group(name="Interação Humano-Computador",
+                    description="Foco no design, avaliação e implementação de interfaces e sistemas que facilitam a interação eficiente e agradável entre humanos e computadores.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_4 = Group(name="Engenharia de Software",
+                    description="Abordagem sistemática para o desenvolvimento, manutenção e evolução de software de alta qualidade, utilizando metodologias, técnicas e ferramentas específicas.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_5 = Group(name="Metodologia de Pesquisa em Computação",
+                    description="Estudo dos métodos e técnicas para a condução de pesquisas científicas na área de computação, incluindo a formulação de problemas, experimentação e análise de dados.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_6 = Group(name="Projetos Empreendedores",
+                    description="Disciplina voltada ao desenvolvimento de habilidades empreendedoras para a criação e gestão de startups e inovações tecnológicas.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+    group_7 = Group(name="Teoria dos Grafos",
+                    description="Análise e aplicação de grafos como estruturas matemáticas, abordando problemas como caminhos mínimos, árvores geradoras e fluxos em redes.",
+                    creation_date=datetime.now(),
+                    created_by=session.exec(select(User).order_by(func.random())).first()
+                    )
+
+    session.add(group_1)
+    session.add(group_2)
+    session.add(group_3)
+    session.add(group_4)
+    session.add(group_5)
+    session.add(group_6)
+    session.add(group_7)
+
+    session.commit()
+
+print(__name__)
+
+# if __name__ == "main": # if __name__ == "__main__":
+create_db_and_tables()
+create_users()
+create_groups()
+
 @app.get("/")
 def healthcheck():
     return {"status": "ok"}
 
-@app.post("/user")
-@db_session
-def create_user(user_data: dict):
-    if User.exists(email=user_data["email"]):
-        raise HTTPException(
-            status_code=400, detail="User with this email already exists."
-        )
+@app.post("/user/")
+def create_user(user: User):
+    with Session(engine) as session:
+        # TODO: check for existing email
+
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user # TODO: check
     
-    User(
-        name=user_data["name"],
-        email=user_data["email"],
-        password_hash=user_data.get("password_hash"),
-        bio=user_data.get("bio"),
-        registered_at=datetime.now().isoformat(),
-    )
-
-    return {"status": "ok"}
-
 @app.get("/user/{user_id}")
-@db_session
 def get_user_by_id(user_id: int):
-    if User.exists(id=user_id):
-        return User[user_id]
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"User with {user_id=} does not exist."
-    )
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.id == user_id)).one()
 
-@app.post("/group")
-@db_session
-def create_group(group_data: dict):
-    if Group.exists(name=group_data["name"]):
-        raise HTTPException(
-            status_code=400, detail="Group with this name already exists."
-        )
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return user
     
-    Group(
-        created_by=group_data["created_by"],
-        name=group_data["name"],
-        description=group_data["description"],
-        posts=set()
-    )
+@app.get("/user/{user_id}/groups/")
+def get_groups_by_user_id(user_id: int):
+    with Session(engine) as session:
+        groups = session.exec(select(Group).where(User.id == user_id)).all() # TODO: fix
+        return groups
 
-    return {"status": "ok"}
+@app.get("/user/")
+def get_all_users():
+    with Session(engine) as session:
+        users = session.exec(select(User)).all()
+        return users
+    
+@app.post("/group/")
+def create_group(group: Group):
+    with Session(engine) as session:
+        session.add(group)
+        session.commit()
+        session.refresh(group)
+        return group # TODO: check
+    
+@app.get("/group/{group_id}")
+def get_group_by_id(group_id: int):
+    with Session(engine) as session:
+        group = session.exec(select(Group).where(Group.id == group_id)).one()
+        return group
+    
+@app.post("/post/")
+def create_post(post: Post):
+    with Session(engine) as session:
+        # TODO: check for existing email
 
-# @app.get("/group/{group_id}")
-# @db_session
-# def get_group_by_id(group_id: int):
-#     if Group.exists(id=group_id):
-#         return Group[group_id]
-#     else:
-#         raise HTTPException(
-#             status_code = 404, detail = f"Group with {group_id=} does not exist."
-#     )
+        session.add(post)
+        session.commit()
+        session.refresh(post)
+        return post # TODO: check
 
-@app.get("/publication/{post_id}")
-@db_session
+@app.get("/post/{post_id}")
 def get_post_by_id(post_id: int):
-    if Publication.exists(id=post_id):
-        return Publication[post_id]
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Post with {post_id=} does not exist."
-    )
+    with Session(engine) as session:
+        post = session.exec(select(Post).where(Post.id == post_id)).one()
+        return post
 
-@app.post("/publication")
-@db_session
-def create_post(post_data: dict):
-    Publication(
-        author=post_data["author_id"],
-        group=post_data["group_id"],
-        timestamp=datetime.now().isoformat(), # TODO
-        text_content=post_data["text_content"],
-        external_content_url=post_data.get("external_content_url")
-    )
+@app.delete("/post/{post_id}")
+def delete_post_by_id(post_id: int):
+    with Session(engine) as session:
+        post = session.get(Post, post_id)
 
-    return {"status": "ok"} # TODO
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
 
-@app.delete("/publication/{post_id}")
-@db_session
-def delete_post(post_id: int):
-    if Publication.exists(id=post_id):
-        Publication[post_id].delete()
+        session.delete(post)
+        session.commit()
 
-        return {"status": "ok"} # TODO
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Post with {post_id=} does not exist."
-    )
+        return {"ok": True} # TODO: check
 
-@app.post("/comment")
-@db_session
-def create_comment(comment_data: dict):
-    Comment(
-        author=comment_data["author_id"],
-        publication=comment_data["post_id"],
-        timestamp=datetime.now().isoformat(), # TODO
-        text_content=comment_data["text_content"]
-    )
+@app.post("/post/{post_id}/comment")
+def create_comment(post_id: int, comment: Comment):
+    comment.post_id = post_id # TODO: check
 
-    return {"status": "ok"} # TODO
+    with Session(engine) as session:
+        session.add(comment)
+        session.commit()
+        session.refresh(comment)
+        return comment
+    
+@app.get("/post/{post_id}/comment")
+def get_comments_by_post_id(post_id: int):
+    with Session(engine) as session:
+        comments = session.exec(select(Comment).where(Comment.post_id == post_id)).all()
+        return comments
 
-@app.delete("/comment/{comment_id}")
-@db_session
-def delete_comment(comment_id: int):
-    if Comment.exists(id=comment_id):
-        Comment[comment_id].delete()
-        return {"status": "ok"} # TODO
-    else:
-        raise HTTPException(
-            status_code = 404, detail = f"Comment with {comment_id=} does not exist."
-    )
+@app.delete("/post/{post_id}/comment/{comment_id}") # TODO: check
+def delete_comment_by_id(post_id: int, comment_id: int):
+    with Session(engine) as session:
+        comment = session.get(Comment, comment_id)
 
-@app.post("/like")
-@db_session
-def like_post(like_data: dict):
-    Like(
-        author=like_data["author_id"],
-        publication=like_data["post_id"],
-        # timestamp=datetime.now().isoformat(), # TODO
-    )
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found")
 
-    return {"status": "ok"} # TODO
+        session.delete(comment)
+        session.commit()
 
-@app.post("/follow")
-@db_session
-def follow_user(connection_data: dict):
-    Connection(
-        source=connection_data["source"],
-        destination=connection_data["destination"],
-    )
+        return {"ok": True} # TODO: check
 
-    return {"status": "ok"} # TODO
+@app.post("/post/{post_id}/like")
+def like_post(post_id: int, like: Like):
+    like.post_id = post_id # TODO: check
 
-@app.delete("/follow/{user_id}")
-@db_session
-def unfollow(connection_id: int):
-    Connection[connection_id].delete() # TODO
+    with Session(engine) as session:
+        session.add(like)
+        session.commit()
+        session.refresh(like)
+        return like
+    
+@app.get("/post/{post_id}/like")
+def get_likes_by_post_id(post_id: int):
+    with Session(engine) as session:
+        likes = session.exec(select(Like).where(Like.post_id == post_id)).all()
+        return likes
+    
+@app.delete("/posts/{post_id}/like")
+def remove_likes(post_id: int):
+    with Session(engine) as session:
+        like = session.exec(select(Like).where(Like.post_id == post_id).where(Like.author_id == author_id)).one_or_none()
 
-    return {"status": "ok"} # TODO
+        if not like:
+            raise HTTPException(status_code=404, detail="Like not found")
+        
+        session.delete(like)
+        session.commit()
+
+        return {"ok": True} # TODO: check
+    
+@app.get("/user/{user_id}/posts/") # TODO: CO
+def get_posts_by_user_id(user_id: int):
+    with Session(engine) as session:
+        posts = session.exec(select(Post).where(Post.author_id == user_id)).all()
+        return posts
+    
+@app.get("/user/{user_id}/groups/")
+def get_member_groups_by_user_id(user_id: int):
+    with Session(engine) as session:
+        groups = session.exec(
+            select(Group).join(UserGroupLink).where(UserGroupLink.user_id == user_id)
+        ).all()
+        return groups
+
+@app.post("/user/{user_id}/groups/{group_id}/join")
+def join_group(user_id: int, group_id: int):
+    with Session(engine) as session:
+
+        group = session.exec(select(Group).where(Group.id == group_id)).one_or_none()
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+
+        user_group_link = session.exec(
+            select(UserGroupLink).where(UserGroupLink.user_id == user_id).where(UserGroupLink.group_id == group_id)
+        ).one_or_none()
+        if user_group_link:
+            raise HTTPException(status_code=400, detail="User is already a member of the group")
+
+        new_user_group_link = UserGroupLink(user_id=user_id, group_id=group_id)
+        session.add(new_user_group_link)
+        session.commit()
+
+        return {"ok": True}
