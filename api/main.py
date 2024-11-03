@@ -105,14 +105,20 @@ def create_groups():
 
 print(__name__)
 
-# if __name__ == "main": # if __name__ == "__main__":
-create_db_and_tables()
-create_users()
-create_groups()
+# # if __name__ == "main": # if __name__ == "__main__":
+# create_db_and_tables()
+# create_users()
+# create_groups()
 
 @app.get("/")
 def healthcheck():
     return {"status": "ok"}
+
+@app.get("/init")
+def init_db():
+    create_db_and_tables()
+    create_users()
+    create_groups()
 
 @app.post("/user/")
 def create_user(user: User):
