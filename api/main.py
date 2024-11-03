@@ -103,9 +103,11 @@ def create_groups():
 
     session.commit()
 
+print(__name__)
+
 # if __name__ == "main": # if __name__ == "__main__":
 create_db_and_tables()
-# create_users()
+create_users()
 create_groups()
 
 @app.get("/")
