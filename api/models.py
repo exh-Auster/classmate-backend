@@ -2,6 +2,7 @@ import os
 
 from datetime import datetime
 
+from pydantic import EmailStr
 from sqlmodel import *
 
 class UserGroupLink(SQLModel, table=True):
@@ -10,7 +11,8 @@ class UserGroupLink(SQLModel, table=True):
 
 class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    email: str = Field(sa_column_kwargs={"unique": True}) # Required(str, 254, unique=True)
+    # email: str = Field(unique=True) # Required(str, 254, unique=True)
+    email: EmailStr = Field(unique=True, index=True, max_length=255)
     password_hash: str # Required(str)
     registered_at: datetime = datetime.now() # Required(datetime)
     name: str # Required(str, 70)
@@ -47,7 +49,6 @@ class Post(SQLModel, table=True):
 
     group_id: int = Field(default=None, foreign_key="group.id")
     group: Group = Relationship(back_populates="posts") # Required(Group)
-
 
 class Comment(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True) 
