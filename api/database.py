@@ -4,7 +4,7 @@ from sqlalchemy.engine import URL
 
 from .models import *
 
-url_object = URL.create(
+postgres_url_object = URL.create(
     "postgresql",
     username=os.environ["POSTGRES_USER"],
     password=os.environ["POSTGRES_PASSWORD"],
@@ -17,9 +17,7 @@ url_object = URL.create(
 
 # sqlite_url = os.environ["POSTGRES_URL"]
 
-sqlite_url = url_object
-
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(postgres_url_object, echo=True)
 
 def create_db_and_tables():  
     SQLModel.metadata.create_all(engine)
