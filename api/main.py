@@ -26,25 +26,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 def create_users():
-    user_1 = User(email="test1@test.com",
+    user_1 = User(email="felipe@mackenzista.com.br",
                   password_hash="password1",
-                  registered_at=datetime.now(),
+                  registered_at=datetime(2024,9,23,19,20),
                   name="Felipe Ribeiro",
-                  bio="bio1"
+                  bio="Estudante do 6º semestre de Ciência da Computação",
                   )
     
-    user_2 = User(email="test2@test.com",
+    user_2 = User(email="koji@mackenzista.com.br",
                   password_hash="password2",
-                  registered_at=datetime.now(),
+                  registered_at=datetime(2024,9,23,19,20),
                   name="Enzo Koji",
-                  bio="bio2"
+                  bio="Estudante do 6º semestre de Ciência da Computação"
                   )
-    user_3 = User(email="test3@test.com",
+    user_3 = User(email="yuri@mackenzista.com.br",
                   password_hash="password3",
-                  registered_at=datetime.now(),
+                  registered_at=datetime(2024,9,23,19,20),
                   name="Yuri Nichimura",
-                  bio="bio3"
+                  bio="Estudante do 6º semestre de Ciência da Computação"
                   )
 
     session = Session(engine)
