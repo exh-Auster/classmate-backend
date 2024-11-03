@@ -40,7 +40,7 @@ class Post(SQLModel, table=True):
     likes: list["Like"] | None = Relationship(back_populates="post") # Set('Like')
     comments: list["Comment"] | None = Relationship(back_populates="post") # Set('Comment')
     external_content_url: str | None # Optional(str, 255)
-    timestamp: datetime # Required(datetime)
+    timestamp: datetime = datetime.now() # Required(datetime)
 
     author_id: int = Field(default=None, foreign_key="user.id")
     author: User = Relationship(back_populates="posts") # Required(User)
@@ -52,17 +52,17 @@ class Post(SQLModel, table=True):
 class Comment(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True) 
     body: str # Required(str, 240)
-    timestamp: datetime # Required(datetime)
+    timestamp: datetime = datetime.now() # Required(datetime)
 
     author_id: int = Field(default=None, foreign_key="user.id")
     author: User = Relationship(back_populates="comments") # Required(User)
 
-    post_id: int = Field(default=None, foreign_key="post.id")
+    post_id: int | None = Field(default=None, foreign_key="post.id")
     post: Post = Relationship(back_populates="comments") # Required(Post)
 
 class Like(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True) # TODO: composite?
-    timestamp: datetime # Required(datetime)
+    timestamp: datetime = datetime.now() # Required(datetime)
 
     author_id: int = Field(default=None, foreign_key="user.id")
     author: User = Relationship(back_populates="likes") # Required(User)
@@ -72,7 +72,7 @@ class Like(SQLModel, table=True):
 
 class Following(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True) # TODO: composite?
-    timestamp: datetime # Required(datetime)
+    timestamp: datetime = datetime.now() # Required(datetime)
 
     user_id: int = Field(default=None, foreign_key="user.id") # TODO: check
     follower: User = Relationship(back_populates="following") # Required(User, reverse='following')
