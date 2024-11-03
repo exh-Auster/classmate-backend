@@ -126,6 +126,10 @@ def create_user(user: User):
 def get_user_by_id(user_id: int):
     with Session(engine) as session:
         user = session.exec(select(User).where(User.id == user_id)).one()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
         return user
     
 @app.get("/user/{user_id}/groups/")
@@ -227,3 +231,50 @@ def get_likes_by_post_id(post_id: int):
     with Session(engine) as session:
         likes = session.exec(select(Like).where(Like.post_id == post_id)).all()
         return likes
+    
+@app.delete("/posts/{post_id}/like")
+def remove_likes(post_id: int):
+    with Session(engine) as session:
+        like = session.exec(select(Like).where(Like.post_id == post_id).where(Like.author_id == author_id)).one_or_none()
+
+        if not like:
+            raise HTTPException(status_code=404, detail="Like not found")
+        
+        session.delete(like)
+        session.commit()
+
+        return {"ok": True} # TODO: check
+    
+@app.get("/user/{user_id}/posts/") # TODO: CO
+def get_posts_by_user_id(user_id: int):
+    with Session(engine) as session:
+        posts = session.exec(select(Post).where(Post.author_id == user_id)).all()
+        return posts
+    
+@app.get("/user/{user_id}/groups/")
+def get_member_groups_by_user_id(user_id: int):
+    with Session(engine) as session:
+        groups = session.exec(
+            select(Group).join(UserGroupLink).where(UserGroupLink.user_id == user_id)
+        ).all()
+        return groups
+
+@app.post("/user/{user_id}/groups/{group_id}/join")
+def join_group(user_id: int, group_id: int):
+    with Session(engine) as session:
+
+        group = session.exec(select(Group).where(Group.id == group_id)).one_or_none()
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+
+        user_group_link = session.exec(
+            select(UserGroupLink).where(UserGroupLink.user_id == user_id).where(UserGroupLink.group_id == group_id)
+        ).one_or_none()
+        if user_group_link:
+            raise HTTPException(status_code=400, detail="User is already a member of the group")
+
+        new_user_group_link = UserGroupLink(user_id=user_id, group_id=group_id)
+        session.add(new_user_group_link)
+        session.commit()
+
+        return {"ok": True}
