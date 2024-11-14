@@ -1,6 +1,7 @@
 import os
 
 from datetime import datetime
+from dateutil import parser
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -95,6 +96,9 @@ def create_post(post: Post):
     with Session(engine) as session:
         # TODO: check for existing email
 
+        if isinstance(post.timestamp, str):
+            post.timestamp = parser.isoparse(post.timestamp)
+
         session.add(post)
         session.commit()
         session.refresh(post)
@@ -121,7 +125,10 @@ def delete_post_by_id(post_id: int):
 
 @app.post("/post/{post_id}/comment")
 def create_comment(post_id: int, comment: Comment):
-    comment.post_id = post_id # TODO: check
+    comment.post_id = post_id
+
+    if isinstance(comment.timestamp, str):
+        comment.timestamp = parser.isoparse(comment.timestamp)
 
     with Session(engine) as session:
         session.add(comment)
