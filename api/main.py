@@ -58,10 +58,10 @@ def create_user(user: User):
 @app.get("/user/{user_id}")
 def get_user_by_id(user_id: int):
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.id == user_id)).one()
+        user = session.get(User, user_id)
 
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=404, detail=f"User with {user_id=} not found")
 
         return user
     
