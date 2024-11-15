@@ -91,6 +91,12 @@ def get_group_by_id(group_id: int):
         group = session.exec(select(Group).where(Group.id == group_id)).one()
         return group
     
+@app.get("/group/{group_id}/posts")
+def get_posts_by_group_id(group_id: int):
+    with Session(engine) as session:
+        posts = session.exec(select(Post).where(Post.group_id == group_id)).all()
+        return posts
+
 @app.post("/post/")
 def create_post(post: Post):
     with Session(engine) as session:
