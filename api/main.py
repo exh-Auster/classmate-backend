@@ -129,6 +129,12 @@ def delete_post_by_id(post_id: int):
 
         return {"ok": True} # TODO: check
 
+@app.get("/post/")
+def get_all_posts():
+    with Session(engine) as session:
+        posts = session.exec(select(Post)).all()
+        return posts
+
 @app.post("/post/{post_id}/comment")
 def create_comment(post_id: int, comment: Comment):
     comment.post_id = post_id
