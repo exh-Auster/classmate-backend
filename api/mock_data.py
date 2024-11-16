@@ -78,3 +78,36 @@ def create_groups():
     session.add(group_7)
 
     session.commit()
+
+def create_posts():
+    session = Session(engine)
+
+    bodies = [
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+        "Duis aute irure dolor in reprehenderit, in voluptate velit esse cillum dolore eu fugiat nulla.",
+        "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.",
+        "Mollit anim id est laborum, sed ut perspiciatis unde omnis iste natus error sit voluptatem.",
+        "Accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore.",
+        "Veritatis et quasi architecto beatae vitae dicta sunt explicabo, nemo enim ipsam voluptatem.",
+        "Nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit.",
+        "Quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex.",
+        "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit."
+    ]
+
+    for i in range(1, 11):
+        author_id = (i - 1) % 3 + 1
+        group_id = (i - 1) % 7 + 1
+        body = bodies[i % 10]
+
+        post = Post(
+            author_id=author_id,
+            group_id=group_id,
+            body=body,
+            external_content_url="https://curl.com",
+            created_at=datetime.now()
+        )
+
+        session.add(post)
+
+    session.commit()
