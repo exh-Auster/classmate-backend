@@ -12,6 +12,8 @@ from api.mock_data import *
 
 from .database import * # from .db import engine, SQLModel
 
+# import pytz
+
 app = FastAPI()
 
 origins = [
@@ -103,7 +105,7 @@ def create_post(post: Post):
         # TODO: check for existing email
 
         if isinstance(post.timestamp, str):
-            post.timestamp = parser.isoparse(post.timestamp)
+            post.timestamp = parser.isoparse(post.timestamp)#.astimezone(pytz.timezone('America/Sao_Paulo'))
 
         session.add(post)
         session.commit()
@@ -140,7 +142,7 @@ def create_comment(post_id: int, comment: Comment):
     comment.post_id = post_id
 
     if isinstance(comment.timestamp, str):
-        comment.timestamp = parser.isoparse(comment.timestamp)
+        comment.timestamp = parser.isoparse(comment.timestamp)#.astimezone(pytz.timezone('America/Sao_Paulo'))
 
     with Session(engine) as session:
         session.add(comment)
@@ -170,6 +172,9 @@ def delete_comment_by_id(post_id: int, comment_id: int):
 @app.post("/post/{post_id}/like")
 def like_post(post_id: int, like: Like):
     like.post_id = post_id # TODO: check
+
+    if isinstance(like.timestamp, str):
+            like.timestamp = parser.isoparse(like.timestamp)#.astimezone(pytz.timezone('America/Sao_Paulo'))
 
     with Session(engine) as session:
         session.add(like)
