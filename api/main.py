@@ -189,9 +189,9 @@ def get_likes_by_post_id(post_id: int):
         return likes
     
 @app.delete("/posts/{post_id}/like")
-def remove_likes(post_id: int):
+def remove_likes(post_id: int, like: Like):
     with Session(engine) as session:
-        like = session.exec(select(Like).where(Like.post_id == post_id).where(Like.author_id == author_id)).one_or_none()
+        like = session.exec(select(Like).where(Like.post_id == post_id).where(Like.author_id == like.author_id)).one_or_none()
 
         if not like:
             raise HTTPException(status_code=404, detail="Like not found")

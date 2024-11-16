@@ -61,15 +61,26 @@ class Comment(SQLModel, table=True):
     post_id: int | None = Field(default=None, foreign_key="post.id")
     post: Post = Relationship(back_populates="comments") # Required(Post)
 
+# class Like(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True) # TODO: composite?
+#     timestamp: datetime = datetime.now() # Required(datetime)
+
+#     author_id: int = Field(default=None, foreign_key="user.id")
+#     author: User = Relationship(back_populates="likes") # Required(User)
+
+#     post_id: int = Field(default=None, foreign_key="post.id")
+#     post: Post = Relationship(back_populates="likes") # Required(Post)
+
 class Like(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True) # TODO: composite?
-    timestamp: datetime = datetime.now() # Required(datetime)
+    author_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
+    post_id: int = Field(default=None, foreign_key="post.id", primary_key=True)
+    timestamp: datetime = datetime.now()
 
-    author_id: int = Field(default=None, foreign_key="user.id")
-    author: User = Relationship(back_populates="likes") # Required(User)
+    author: User = Relationship(back_populates="likes")
+    post: Post = Relationship(back_populates="likes")
 
-    post_id: int = Field(default=None, foreign_key="post.id")
-    post: Post = Relationship(back_populates="likes") # Required(Post)
+    class Config:
+        table_args = (PrimaryKeyConstraint('author_id', 'post_id'),)
 
 class Following(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True) # TODO: composite?
