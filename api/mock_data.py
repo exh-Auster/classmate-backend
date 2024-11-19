@@ -104,7 +104,7 @@ def create_posts():
             author_id=author_id,
             group_id=group_id,
             body=body,
-            external_content_url="https://curl.com",
+            external_content_url="https://mackenzie.br",
             created_at=datetime.now()
         )
 

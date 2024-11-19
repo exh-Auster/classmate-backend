@@ -47,6 +47,7 @@ def init_db():
     create_db_and_tables()
     create_users()
     create_groups()
+    create_posts()
 
 @app.post("/user/")
 def create_user(user: User):
