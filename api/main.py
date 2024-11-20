@@ -1,4 +1,8 @@
+import httpx
 import os
+import re
+
+from api.mock_data import *
 
 from datetime import datetime
 from dateutil import parser
@@ -7,8 +11,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlmodel import *
-
-from api.mock_data import *
 
 from .database import * # from .db import engine, SQLModel
 
@@ -268,3 +270,29 @@ def join_group(user_id: int, group_id: int):
         session.commit()
 
         return {"ok": True}
+    
+@app.get("/fetch-title")
+async def fetch_title(url: str):
+    if not url:
+        raise HTTPException(status_code=400, detail="Missing URL parameter")
+    
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, max_redirects=5) as client:
+            response = await client.get(url)
+        
+        html = response.text
+        match = re.search(r"<title>([^<]*)<\/title>", html, re.IGNORECASE)
+        title = match.group(1) if match else "No Title"
+        
+        return {"title": title}
+    
+    except httpx.TooManyRedirects:
+        raise HTTPException(status_code=400, detail="Too many redirects")
+    
+    except httpx.HTTPStatusError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        raise HTTPException(status_code=response.status_code, detail=f"HTTP error: {http_err}")
+    
+    except Exception as error:
+        print(f"Error fetching title: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching title")
