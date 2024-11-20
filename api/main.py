@@ -225,7 +225,7 @@ def get_bookmarks_by_user_id(user_id: int):
 @app.delete("/posts/{post_id}/bookmark")
 def remove_bookmark(post_id: int, bookmark: Bookmark):
     with Session(engine) as session:
-        bookmark = session.exec(select(Bookmark).where(Bookmark.post_id == post_id).where(Bookmark.author_id == like.author_id)).one_or_none()
+        bookmark = session.exec(select(Bookmark).where(Bookmark.post_id == post_id).where(Bookmark.author_id == bookmark.author_id)).one_or_none()
 
         if not bookmark:
             raise HTTPException(status_code=404, detail="Bookmark not found")
