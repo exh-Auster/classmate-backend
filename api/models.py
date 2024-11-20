@@ -21,6 +21,7 @@ class User(SQLModel, table=True):
     created_groups: list["Group"] | None = Relationship(back_populates="created_by") # Set('Group', reverse='created_by')
     posts: list["Post"] | None = Relationship(back_populates="author") # Set('Post')
     likes: list["Like"] | None = Relationship(back_populates="author") # Set('Like')
+    bookmarks: list["Bookmark"] | None = Relationship(back_populates="author")
     comments: list["Comment"] | None = Relationship(back_populates="author") # Set('Comment')
     following: list["Following"] | None = Relationship(back_populates="follower") # Set('Following', reverse='follower')
     followers: list["Following"] | None = Relationship(back_populates="followee") # Set('Following', reverse='followee')
@@ -40,6 +41,7 @@ class Post(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     body: str # Required(str, 500)
     likes: list["Like"] | None = Relationship(back_populates="post") # Set('Like')
+    bookmarks: list["Bookmark"] | None = Relationship(back_populates="post")
     comments: list["Comment"] | None = Relationship(back_populates="post") # Set('Comment')
     external_content_url: str | None # Optional(str, 255)
     timestamp: datetime = datetime.now() # Required(datetime)
@@ -78,6 +80,17 @@ class Like(SQLModel, table=True):
 
     author: User = Relationship(back_populates="likes")
     post: Post = Relationship(back_populates="likes")
+
+    class Config:
+        table_args = (PrimaryKeyConstraint('author_id', 'post_id'),)
+
+class Bookmark(SQLModel, table=True):
+    author_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
+    post_id: int = Field(default=None, foreign_key="post.id", primary_key=True)
+    timestamp: datetime = datetime.now()
+
+    author: User = Relationship(back_populates="bookmarks")
+    post: Post = Relationship(back_populates="bookmarks")
 
     class Config:
         table_args = (PrimaryKeyConstraint('author_id', 'post_id'),)

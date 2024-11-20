@@ -203,6 +203,38 @@ def remove_likes(post_id: int, like: Like):
 
         return {"ok": True} # TODO: check
     
+@app.post("/post/{post_id}/bookmark")
+def bookmark_post(post_id: int, bookmark: Bookmark):
+    bookmark.post_id = post_id # TODO: check
+
+    if isinstance(bookmark.timestamp, str):
+            bookmark.timestamp = parser.isoparse(bookmark.timestamp)#.astimezone(pytz.timezone('America/Sao_Paulo'))
+
+    with Session(engine) as session:
+        session.add(bookmark)
+        session.commit()
+        session.refresh(bookmark)
+        return bookmark
+    
+@app.get("/user/{user_id}/bookmarks/")
+def get_bookmarks_by_user_id(user_id: int):
+    with Session(engine) as session:
+        bookmarks = session.exec(select(Bookmark).where(User.id == user_id)).all() # TODO: fix
+        return bookmarks
+    
+@app.delete("/posts/{post_id}/bookmark")
+def remove_bookmark(post_id: int, bookmark: Bookmark):
+    with Session(engine) as session:
+        bookmark = session.exec(select(Bookmark).where(Bookmark.post_id == post_id).where(Bookmark.author_id == like.author_id)).one_or_none()
+
+        if not bookmark:
+            raise HTTPException(status_code=404, detail="Bookmark not found")
+        
+        session.delete(bookmark)
+        session.commit()
+
+        return {"ok": True} # TODO: check
+    
 @app.get("/user/{user_id}/posts/") # TODO: CO
 def get_posts_by_user_id(user_id: int):
     with Session(engine) as session:
