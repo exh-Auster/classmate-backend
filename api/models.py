@@ -44,7 +44,7 @@ class Post(SQLModel, table=True):
     bookmarks: list["Bookmark"] | None = Relationship(back_populates="post")
     comments: list["Comment"] | None = Relationship(back_populates="post") # Set('Comment')
     external_content_url: str | None # Optional(str, 255)
-    timestamp: datetime = datetime.now() # Required(datetime)
+    timestamp: datetime # Required(datetime)
 
     author_id: int = Field(default=None, foreign_key="user.id")
     author: User = Relationship(back_populates="posts") # Required(User)
